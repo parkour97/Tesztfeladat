@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="../Frontend/Frontend.csproj" />
+  <Project Path="../Server/Server.csproj" />
   <Project Path="Device.csproj" />
 </Solution>
