@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Device.Control;
+using Device.Model;
+using System;
 
 namespace Device
 {
@@ -9,6 +11,7 @@ namespace Device
         private readonly SystemUsageMonitor _monitor;
         private readonly TCPSender _sender;
         private readonly ILogger<Worker> _logger;
+        private readonly TCPLogger _tcpLogger;
         private readonly SystemUsageQueue _queue;
 
         public Worker(ILogger<Worker> logger)
@@ -17,8 +20,9 @@ namespace Device
             _sender = new TCPSender("127.0.0.1", 9000);
             _sender.CommandReceived += OnServerCommand;
             _logger = logger;
+            _tcpLogger = new TCPLogger(nameof(Worker), _sender);
 
-            
+
             _queue = new SystemUsageQueue(capacity: 20); // N méretű sor
             _interval = 5000;
         }
@@ -27,6 +31,7 @@ namespace Device
         {
             if (_logger.IsEnabled(LogLevel.Information))
                 _logger.LogInformation("Windows monitoring worker started at: {time}", DateTimeOffset.Now);
+            _tcpLogger.LogInformation("Worker started");
 
             await _sender.ConnectAsync(stoppingToken);
 
@@ -34,6 +39,9 @@ namespace Device
             {
                 try
                 {
+                    if (_logger.IsEnabled(LogLevel.Information))
+                        _logger.LogInformation("Getting Data {time}", DateTimeOffset.Now);
+                    _tcpLogger.LogInformation("Getting data");
                     var cpu = _monitor.GetCpuUsagePercent();
                     double memPercentage = _monitor.GetMemoryUsagePercent();
 
@@ -53,6 +61,7 @@ namespace Device
                 {
                     if (_logger.IsEnabled(LogLevel.Information))
                         _logger.LogError(ex, "Sending error");
+                    _tcpLogger.LogError(ex, "Something went wrong");
                 }
 
                 await Task.Delay(_interval, stoppingToken);

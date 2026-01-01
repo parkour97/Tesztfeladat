@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace Device
+namespace Device.Control
 {
     public class SystemUsageMonitor
     {

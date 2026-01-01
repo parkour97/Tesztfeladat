@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Device.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -6,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Device
+namespace Device.Control
 {
     public class TCPSender : IDisposable
     {
@@ -37,12 +38,12 @@ namespace Device
             _ = Task.Run(() => ListenAsync(ct), ct);
         }
 
-        public async Task SendAsync(SystemUsageDTO systemUsage, CancellationToken ct)
+        public async Task SendAsync<T>(T data, CancellationToken ct)
         {
             if (_stream == null)
                 throw new InvalidOperationException("TCP client is not connected.");
 
-            var json = JsonSerializer.Serialize(systemUsage);
+            var json = JsonSerializer.Serialize(data);
             var bytes = Encoding.UTF8.GetBytes(json + "\n");
 
             await _stream.WriteAsync(bytes, ct);
