@@ -1,0 +1,108 @@
+﻿@page "/device-params"
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+@* @inject ApiClient ApiClient *@
+@inject AuthenticationStateProvider AuthStateProvider
+@implements IDisposable
+
+<PageTitle>DeviceParams</PageTitle>
+
+<h1>Device Parameters</h1>
+
+@if (deviceParamList.Count() == 0)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var deviceParam in deviceParamList)
+            {
+                <tr>
+                    <td>@deviceParam.Name</td>
+                    <td><input type="number" @bind="deviceParam.Value" @bind:event="oninput" /></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button class="btn btn-primary" @onclick="Submit">Submit</button>
+
+    @if (!string.IsNullOrEmpty(StatusMessage))
+    {
+        <div class="alert alert-info mt-2">@StatusMessage</div>
+    }
+}
+
+@code {
+    private List<DeviceParam> deviceParamList = new List<DeviceParam>();
+    private Timer? _timer;
+
+    private string? StatusMessage;
+
+    private async void Submit()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+            StatusMessage = "User is not logged in.";
+            return;
+        }
+
+        var username = user.Identity?.Name ?? "UnknownUser";
+        foreach (var deviceParam in deviceParamList)
+        {
+            //var success = await ApiClient.SetDeviceParameterAsync(deviceParam.Id, deviceParam.Value, username);
+
+            // StatusMessage = success ? "Value sent successfully!" : "Failed to send value.";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+
+        StartHotReload();
+    }
+
+    private void StartHotReload()
+    {
+        _timer = new Timer(1000*60); // 60 second interval
+        _timer.Elapsed += async (sender, e) => await LoadDataAsync();
+        _timer.AutoReset = true;
+        _timer.Enabled = true;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        deviceParamList.Clear();
+        deviceParamList.Add(new DeviceParam()
+        {
+            Id = 1,
+            Name = "Interval",
+            Value = 5
+        });
+        deviceParamList.Add(new DeviceParam()
+        {
+            Id = 2,
+            Name = "Queue_size",
+            Value = 64
+        });
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}

@@ -1,0 +1,119 @@
+﻿@page "/history"
+@implements IDisposable
+
+<PageTitle>History</PageTitle>
+
+<h1>Usage History</h1>
+
+@if (SystemUsageHistory.Count == 0)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<div class="row mb-3 align-items-end">
+		<div class="col-md-3">
+			<label class="form-label">Device</label>
+			<select class="form-select" @bind="SelectedDeviceId">
+				@foreach (var device in Devices)
+				{
+					<option value="@device.Id">@device.Name</option>
+				}
+			</select>
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">From</label>
+			<input type="datetime-local" class="form-control" @bind="SelectedFrom" />
+		</div>
+		<div class="col-md-3">
+			<label class="form-label">To</label>
+			<input type="datetime-local" class="form-control" @bind="SelectedTo" />
+		</div>
+	</div>
+
+	<table class="table">
+		<thead>
+			<tr>
+				<th>DeviceId</th>
+				<th>Device Name</th>
+				<th>Usage (%)</th>
+				<th>Timestamp</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var usage in SystemUsageHistory)
+			{
+				<tr>
+					<td>@usage.DeviceId</td>
+					<td>@usage.DeviceName</td>
+					<td>@usage.Usage</td>
+					<td>@usage.Timestamp</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	private List<SystemUsage> SystemUsageHistory = new();
+	private Timer? _timer;
+
+	// UI változók
+	private int SelectedDeviceId = 0;
+	private DateTime SelectedFrom = DateTime.Now.Date.AddDays(-7);
+	private DateTime SelectedTo = DateTime.Now;
+
+
+	private List<Device> Devices = new()
+	{
+		new Device(){Id = 0, Name = "All devices"},
+		new Device(){Id = 1, Name = "CPUMonitor" },
+		new Device(){Id = 2, Name = "MemoryMonitor"}
+	};
+
+	protected override async Task OnInitializedAsync()
+	{
+		Console.WriteLine($"Init at {DateTime.Now}");
+		await LoadDataAsync();
+
+		await StartHotReload();
+	}
+
+	private async Task StartHotReload()
+	{
+		_timer = new Timer(1000*10); // 10 second interval
+		Console.WriteLine($"Timer Started at {DateTime.Now}");
+		_timer.Elapsed += async (sender, e) => await LoadDataAsync();
+		_timer.AutoReset = true;
+		_timer.Enabled = true;
+	}
+
+	private async Task LoadDataAsync()
+	{
+		Console.WriteLine($"Reload at {DateTime.Now}");
+
+		var startDate = DateTime.Now;
+		var names = new[] { "CPUMonitor", "MemoryMonitor" };
+
+		var allData = Enumerable.Range(1, 5).Select(index => new SystemUsage
+		{
+			Id = index,
+			Timestamp = startDate.AddDays(-index),
+			Usage = Random.Shared.Next(0, 100),
+			DeviceName = names[Random.Shared.Next(names.Length)],
+			DeviceId = 1+Random.Shared.Next(names.Length)
+		}).ToList();
+
+		SystemUsageHistory = allData
+			.Where(u => (SelectedDeviceId == 0 || u.DeviceId == SelectedDeviceId)
+						&& u.Timestamp >= SelectedFrom
+						&& u.Timestamp <= SelectedTo)
+			.ToList();
+		await InvokeAsync(StateHasChanged);
+	}
+
+	public void Dispose()
+	{
+		_timer?.Dispose();
+	}
+}

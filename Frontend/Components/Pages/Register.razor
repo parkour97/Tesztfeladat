@@ -1,0 +1,72 @@
+﻿@page "/register"
+@* @inject ApiClient ApiClient *@
+@inject NavigationManager Nav
+
+<PageTitle>Register</PageTitle>
+
+<h3>Register</h3>
+
+<EditForm Model="registerModel" OnValidSubmit="HandleRegister">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label>Username</label>
+        <InputText @bind-Value="registerModel.Username" class="form-control" />
+        <ValidationMessage For="@(() => registerModel.Username)" />
+    </div>
+
+    <div class="mb-3">
+        <label>Email</label>
+        <InputText @bind-Value="registerModel.Email" class="form-control" />
+        <ValidationMessage For="@(() => registerModel.Email)" />
+    </div>
+
+    <div class="mb-3">
+        <label>Password</label>
+        <InputText @bind-Value="registerModel.Password" type="password" class="form-control" />
+        <ValidationMessage For="@(() => registerModel.Password)" />
+    </div>
+
+    <div class="mb-3">
+        <label>Confirm Password</label>
+        <InputText @bind-Value="registerModel.ConfirmPassword" type="password" class="form-control" />
+        <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Register</button>
+</EditForm>
+
+<p>
+    Already have an account?
+    <a href="/login">Login here</a>
+</p>
+
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger">@ErrorMessage</div>
+}
+
+@code {
+    private RegisterModel registerModel = new RegisterModel();
+    private string? ErrorMessage;
+
+    private async Task HandleRegister()
+    {
+        ErrorMessage = null;
+
+        // var success = await ApiClient.RegisterAsync(
+        //     registerModel.Username,
+        //     registerModel.Email,
+        //     registerModel.Password);
+
+        // if (success)
+        // {
+        //     Nav.NavigateTo("/login");
+        // }
+        // else
+        // {
+        //     ErrorMessage = "Registration failed. Try again.";
+        // }
+    }
+}

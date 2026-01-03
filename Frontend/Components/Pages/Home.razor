@@ -1,7 +1,83 @@
 ﻿@page "/"
+@attribute [StreamRendering]
+@implements IDisposable
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Devices</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Devices</h1>
 
-Welcome to your new app.
+@if (deviceList.Count() == 0)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Usage</th>
+                <th>LastUpdated</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var device in deviceList)
+            {
+                <tr>
+                    <td>@device.Name</td>
+                    <td>@device.Usage</td>
+                    <td>@device.LastUpdate</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Device> deviceList = new List<Device>();
+    private Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+
+        StartHotReload();
+    }
+
+    private void StartHotReload()
+    {
+        _timer = new Timer(1000*10); // 10 second interval
+        _timer.Elapsed += async (sender, e) => await LoadDataAsync();
+        _timer.AutoReset = true;
+        _timer.Enabled = true;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        var now = DateTime.Now;
+
+        deviceList.Clear();
+
+        deviceList.Add(new Device()
+        {
+            Id = 1,
+            Name = "CPUMonitor",
+            Usage = Random.Shared.Next(0, 100),
+            LastUpdate = now
+        });
+        deviceList.Add(new Device()
+        {
+            Id = 2,
+            Name = "MemoryMonitor",
+            Usage = Random.Shared.Next(0, 100),
+            LastUpdate = now
+        });
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+}
