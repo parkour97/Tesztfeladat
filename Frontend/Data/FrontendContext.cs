@@ -14,6 +14,6 @@ namespace Frontend.Data
         {
         }
 
-        public DbSet<Frontend.Models.SystemUsage> SystemUsage { get; set; } = default!;
+        public DbSet<Frontend.Models.SystemUsageView> SystemUsage { get; set; } = default!;
     }
 }

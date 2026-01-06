@@ -24,6 +24,7 @@ CREATE TABLE Device (
     Name varchar(50) NOT NULL,
     IPAddress varchar(20) NULL,
     Connected boolean NOT NULL,
+    MeasurementCount int NULL,
     Created timestamp NOT NULL DEFAULT NOW(),
     Modified timestamp NULL
 );
@@ -33,6 +34,7 @@ CREATE TABLE DeviceExp (
     Name varchar(50) NOT NULL,
     IPAddress varchar(20) NULL,
     Connected boolean NOT NULL,
+    MeasurementCount int NULL,
     Original int NOT NULL,
     Expired timestamp NOT NULL DEFAULT NOW(),
     Deleted boolean NULL
@@ -176,6 +178,7 @@ BEGIN
             Name,
             IPAddress,
             Connected,
+            MeasurementCount,
             Original,
             Expired,
             Deleted
@@ -184,6 +187,7 @@ BEGIN
             OLD.Name,
             OLD.IPAddress,
             OLD.Connected,
+            OLD.MeasurementCount,
             OLD.Id,
             NOW(),
             FALSE
@@ -209,6 +213,7 @@ BEGIN
         Name,
         IPAddress,
         Connected,
+        MeasurementCount,
         Original,
         Expired,
         Deleted
@@ -217,6 +222,7 @@ BEGIN
         OLD.Name,
         OLD.IPAddress,
         OLD.Connected,
+        OLD.MeasurementCount,
         OLD.Id,
         NOW(),
         TRUE

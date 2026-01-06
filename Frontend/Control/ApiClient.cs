@@ -12,7 +12,7 @@ namespace Frontend.Control
             _http = http;
         }
 
-        public async Task<List<SystemUsage>> GetHistoryAsync(
+        public async Task<List<SystemUsageView>> GetHistoryAsync(
             int deviceId,
             DateTime from,
             DateTime to)
@@ -24,29 +24,29 @@ namespace Frontend.Control
                 $"&to={Uri.EscapeDataString(to.ToString("O"))}";
 
             var result =
-                await _http.GetFromJsonAsync<List<SystemUsage>>(url);
+                await _http.GetFromJsonAsync<List<SystemUsageView>>(url);
 
-            return result ?? new List<SystemUsage>();
+            return result ?? new List<SystemUsageView>();
         }
 
-        public async Task<List<Device>> GetDevicesAsync()
+        public async Task<List<DeviceView>> GetDevicesAsync()
         {
             var url = $"api/devices";
 
             var result =
-                await _http.GetFromJsonAsync<List<Device>>(url);
+                await _http.GetFromJsonAsync<List<DeviceView>>(url);
 
-            return result ?? new List<Device>();
+            return result ?? new List<DeviceView>();
         }
 
-        public async Task<List<DeviceParam>> GetDeviceParamsAsync()
+        public async Task<List<DeviceParamView>> GetDeviceParamsAsync()
         {
             var url = $"api/deviceparams";
 
             var result =
-                await _http.GetFromJsonAsync<List<DeviceParam>>(url);
+                await _http.GetFromJsonAsync<List<DeviceParamView>>(url);
 
-            return result ?? new List<DeviceParam>();
+            return result ?? new List<DeviceParamView>();
         }
 
         public async Task<bool> SetDeviceParameterAsync(int deviceParameterId, int value, string username)

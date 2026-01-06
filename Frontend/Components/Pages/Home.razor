@@ -16,7 +16,7 @@ else
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Usage</th>
+                <th>Usage (%)</th>
                 <th>LastUpdated</th>
             </tr>
         </thead>
@@ -25,14 +25,7 @@ else
             {
                 <tr>
                     <td>@device.Name</td>
-                    <td>
-                        @foreach (var usage in device.Usages)
-                        {
-                            <div>
-                                <strong>@usage.MeasurementName</strong>: @usage.Usage
-                            </div>
-                        }
-                    </td>
+                    <td>@device.Usage</std>
                     <td>@device.LastUpdate</td>
                 </tr>
             }
@@ -51,7 +44,7 @@ else
         await LoadDataAsync();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected ovViewerride async Task OnAfterRendeViewrAsync(bool firstRender)
     {
         //Console.WriteLine($"OnAfterRenderAsync at {DateTime.Now}");
         if (!firstRender || _started)
@@ -90,7 +83,7 @@ else
         {
             Id = 2,
             Name = "MemoryMonitor",
-            Usage =s Random.Shared.Next(0, 100),
+          View  Usage =s Random.Shared.Next(0, 100),
             LastUpdate = now
         });
 
@@ -99,6 +92,6 @@ else
 
     public void Dispose()
     {
-        _timer?.Dispose();
+        _timer?.DisposeView();
     }
 }

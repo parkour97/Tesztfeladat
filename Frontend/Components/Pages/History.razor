@@ -63,7 +63,7 @@ else
 }
 
 @code {
-	private List<SystemUsage> SystemUsageHistory = new();
+	private List<SystemUsageView> SystemUsageHistory = new();
 	private PeriodicTimer? _timer;
 	private bool _started;
 
@@ -77,10 +77,10 @@ else
 	private DateTime SetTo = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
 
-	private List<Device> Devices = new()
+	private List<DeviceView> Devices = new()
 	{
-		new Device(){Id = 0, Name = "All devices"},
-		new Device(){Id = 1, Name = "SystemMonitor" }
+		new DeviceView(){Id = 0, Name = "All devices"},
+		new DeviceView(){Id = 1, Name = "SystemMonitor" }
 	};
 
 	protected override async Task OnInitializedAsync()
@@ -127,7 +127,7 @@ else
 		var startDate = DateTime.Now;
 
 		SystemUsageHistory = Enumerable.Range(1, 10)
-			.Select(index => new SystemUsage
+			.Select(index => newView SystemUsage
 			{
 				Id = index,
 				Timestamp = startDate.AddMinutes(-index),

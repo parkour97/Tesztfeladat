@@ -43,7 +43,7 @@ else
 }
 
 @code {
-    private List<DeviceParam> deviceParamList = new List<DeviceParam>();
+    private List<DeviceParamView> deviceParamList = new List<DeviceParamView>();
     private PeriodicTimer? _timer;
     private bool _started;
 
@@ -100,7 +100,7 @@ else
     private async Task LoadDataAsync()
     {
         deviceParamList.Clear();
-        deviceParamList.Add(new DeviceParam()
+        deviceParamList.Add(new DeviceParamView()
         {
             Id = 1,
             Name = "Interval",
@@ -108,7 +108,7 @@ else
             DeviceId = 1,
             DeviceName = "SystemMonitor"
         });
-        deviceParamList.Add(new DeviceParam()
+        deviceParamList.Add(new DeviceParamView()
         {
             Id = 2,
             Name = "Queue_size",

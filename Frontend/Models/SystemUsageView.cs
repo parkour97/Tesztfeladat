@@ -1,6 +1,6 @@
 ﻿namespace Frontend.Models
 {
-    public class SystemUsage
+    public class SystemUsageView
     {
         public int Id { get; set; }
         public int DeviceId { get; set; }
