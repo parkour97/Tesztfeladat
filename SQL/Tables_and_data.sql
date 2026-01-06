@@ -43,6 +43,7 @@ CREATE TABLE DeviceParam (
     Name varchar(50) NOT NULL,
     DeviceId int NOT NULL,
     Value int NOT NULL,
+    Modifier varchar(50) NULL
     Created timestamp NOT NULL DEFAULT NOW(),
     Modified timestamp NULL
 );
@@ -58,6 +59,7 @@ CREATE TABLE DeviceParamExp (
     Name varchar(50) NOT NULL,
     DeviceId int NOT NULL,
     Value int NOT NULL,
+    Modifier varchar(50) NULL
     Original int NOT NULL,
     Expired timestamp NOT NULL DEFAULT NOW(),
     Deleted boolean NULL
@@ -84,6 +86,15 @@ CREATE TABLE SystemUsageExp (
     Usage real NOT NULL,
     Expired timestamp NOT NULL DEFAULT NOW(),
     Deleted boolean NULL
+);
+
+CREATE TABLE Logs (
+    Id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    Source varchar(50) NOT NULL,
+    LogType varchar(20) NOT NULL,
+    MessageShort varchar(200) NOT NULL,
+    Message text NOT NULL,
+    Created timestamp NOT NULL DEFAULT NOW()
 );
 
 -- Triggers
@@ -231,6 +242,7 @@ BEGIN
             Name,
             DeviceId,
             Value,
+            Modifier,
             Original,
             Expired,
             Deleted
@@ -239,6 +251,7 @@ BEGIN
             OLD.Name,
             OLD.DeviceId,
             OLD.Value,
+            OLD.Modifier,
             OLD.Id,
             NOW(),
             FALSE
@@ -264,6 +277,7 @@ BEGIN
         Name,
         DeviceId,
         Value,
+        Modifier,
         Original,
         Expired,
         Deleted
@@ -272,6 +286,7 @@ BEGIN
         OLD.Name,
         OLD.DeviceId,
         OLD.Value,
+        OLD.Modifier,
         OLD.Id,
         NOW(),
         TRUE

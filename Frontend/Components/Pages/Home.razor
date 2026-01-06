@@ -16,7 +16,7 @@ else
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Usage (%)</th>
+                <th>Usage</th>
                 <th>LastUpdated</th>
             </tr>
         </thead>
@@ -25,7 +25,14 @@ else
             {
                 <tr>
                     <td>@device.Name</td>
-                    <td>@device.Usage</td>
+                    <td>
+                        @foreach (var usage in device.Usages)
+                        {
+                            <div>
+                                <strong>@usage.MeasurementName</strong>: @usage.Usage
+                            </div>
+                        }
+                    </td>
                     <td>@device.LastUpdate</td>
                 </tr>
             }
@@ -76,14 +83,14 @@ else
         {
             Id = 1,
             Name = "CPUMonitor",
-            Usage = Random.Shared.Next(0, 100),
+            Usage =s Random.Shared.Next(0, 100),
             LastUpdate = now
         });
         deviceList.Add(new Device()
         {
             Id = 2,
             Name = "MemoryMonitor",
-            Usage = Random.Shared.Next(0, 100),
+            Usage =s Random.Shared.Next(0, 100),
             LastUpdate = now
         });
 

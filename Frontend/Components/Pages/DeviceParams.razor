@@ -17,6 +17,7 @@ else
     <table class="table">
         <thead>
             <tr>
+                <th>Device Name</th>
                 <th>Name</th>
                 <th>Value</th>
             </tr>
@@ -25,6 +26,7 @@ else
             @foreach (var deviceParam in deviceParamList)
             {
                 <tr>
+                    <td>@deviceParam.DeviceName</td>
                     <td>@deviceParam.Name</td>
                     <td><input type="number" @bind="deviceParam.Value" @bind:event="oninput" /></td>
                 </tr>
@@ -102,13 +104,17 @@ else
         {
             Id = 1,
             Name = "Interval",
-            Value = 5
+            Value = 5,
+            DeviceId = 1,
+            DeviceName = "SystemMonitor"
         });
         deviceParamList.Add(new DeviceParam()
         {
             Id = 2,
             Name = "Queue_size",
-            Value = 64
+            Value = 64,
+            DeviceId = 1,
+            DeviceName = "SystemMonitor"
         });
 
         await InvokeAsync(StateHasChanged);

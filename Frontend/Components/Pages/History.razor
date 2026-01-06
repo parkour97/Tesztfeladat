@@ -42,6 +42,7 @@ else
 			<tr>
 				<th>DeviceId</th>
 				<th>Device Name</th>
+				<th>Measurement Name</th>
 				<th>Usage (%)</th>
 				<th>Timestamp</th>
 			</tr>
@@ -52,6 +53,7 @@ else
 				<tr>
 					<td>@usage.DeviceId</td>
 					<td>@usage.DeviceName</td>
+					<td>@usage.MeasurementName</td>
 					<td>@usage.Usage</td>
 					<td>@usage.Timestamp</td>
 				</tr>
@@ -78,8 +80,7 @@ else
 	private List<Device> Devices = new()
 	{
 		new Device(){Id = 0, Name = "All devices"},
-		new Device(){Id = 1, Name = "CPUMonitor" },
-		new Device(){Id = 2, Name = "MemoryMonitor"}
+		new Device(){Id = 1, Name = "SystemMonitor" }
 	};
 
 	protected override async Task OnInitializedAsync()
@@ -122,17 +123,18 @@ else
 	private async Task LoadDataAsync()
 	{
 		//Console.WriteLine($"Reload at {DateTime.Now}");
-		var names = new[] { "CPUMonitor", "MemoryMonitor" };
+		var names = new[] { "CPU Usage", "Memory Usage" };
 		var startDate = DateTime.Now;
 
-		SystemUsageHistory = Enumerable.Range(1, 5)
+		SystemUsageHistory = Enumerable.Range(1, 10)
 			.Select(index => new SystemUsage
 			{
 				Id = index,
 				Timestamp = startDate.AddMinutes(-index),
 				Usage = Random.Shared.Next(0, 100),
-				DeviceName = names[Random.Shared.Next(names.Length)],
-				DeviceId = 1 + Random.Shared.Next(names.Length)
+				DeviceName = "SystemMonitor",
+				DeviceId = 1 + Random.Shared.Next(names.Length),
+				MeasurementName = names[Random.Shared.Next(names.Length)]
 			})
 			.Where(u =>
 				(SelectedDeviceId == 0 || u.DeviceId == SetDeviceId) &&
