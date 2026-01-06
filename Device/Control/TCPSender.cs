@@ -64,7 +64,6 @@ namespace Device.Control
             }
             catch (Exception)
             {
-                // kapcsolat megszakadt → Worker újraindíthatja
             }
         }
 
@@ -80,7 +79,6 @@ namespace Device.Control
             }
             catch (JsonException)
             {
-                // rossz JSON → eldobjuk
             }
         }
 

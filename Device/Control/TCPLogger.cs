@@ -9,13 +9,13 @@ namespace Device.Control
 {
     public class TCPLogger : ILogger
     {
-        private readonly string _category;
-        private readonly TCPSender _sender;
+        private readonly string category;
+        private readonly TCPSender sender;
 
         public TCPLogger(string category, TCPSender sender)
         {
-            _category = category;
-            _sender = sender;
+            this.category = category;
+            this.sender = sender;
         }
 
         public IDisposable? BeginScope<TState>(TState state) => null;
@@ -37,7 +37,7 @@ namespace Device.Control
             };
 
             // aszinkron küldés, fire-and-forget
-            _ = _sender.SendAsync(msg, CancellationToken.None);
+            _ = sender.SendAsync(msg, CancellationToken.None);
         }
     }
 }

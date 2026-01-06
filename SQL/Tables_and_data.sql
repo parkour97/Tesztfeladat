@@ -72,6 +72,7 @@ CREATE TABLE SystemUsage (
     DeviceId int NOT NULL,
     MeasurementName varchar(50) NOT NULL,
     Usage real NOT NULL,
+    Timestamp timestamp NULL,
     Created timestamp NOT NULL DEFAULT NOW()
 );
 
@@ -86,6 +87,7 @@ CREATE TABLE SystemUsageExp (
     DeviceId int NOT NULL,
     MeasurementName varchar(50) NOT NULL,
     Usage real NOT NULL,
+    Timestamp timestamp NULL,
     Expired timestamp NOT NULL DEFAULT NOW(),
     Deleted boolean NULL
 );
@@ -94,8 +96,8 @@ CREATE TABLE Logs (
     Id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     Source varchar(50) NOT NULL,
     LogType varchar(20) NOT NULL,
-    MessageShort varchar(200) NOT NULL,
     Message text NOT NULL,
+    Timestamp timestamp NULL,
     Created timestamp NOT NULL DEFAULT NOW()
 );
 
@@ -317,6 +319,7 @@ BEGIN
         DeviceId,
         MeasurementName,
         Usage,
+        Timestamp,
         Original,
         Expired,
         Deleted
@@ -325,6 +328,7 @@ BEGIN
         OLD.DeviceId,
         OLD.MeasurementName,
         OLD.Usage,
+        OLD.Timestamp,
         OLD.Id,
         NOW(),
         TRUE

@@ -1,5 +1,5 @@
 ﻿@page "/register"
-@* @inject ApiClient ApiClient *@
+@inject ApiClient ApiClient
 @inject NavigationManager Nav
 
 <PageTitle>Register</PageTitle>
@@ -55,18 +55,18 @@
     {
         ErrorMessage = null;
 
-        // var success = await ApiClient.RegisterAsync(
-        //     registerModel.Username,
-        //     registerModel.Email,
-        //     registerModel.Password);
+        var success = await ApiClient.RegisterAsync(
+            registerModel.Username,
+            registerModel.Email,
+            registerModel.Password);
 
-        // if (success)
-        // {
-        //     Nav.NavigateTo("/login");
-        // }
-        // else
-        // {
-        //     ErrorMessage = "Registration failed. Try again.";
-        // }
+        if (success)
+        {
+            Nav.NavigateTo("/login");
+        }
+        else
+        {
+            ErrorMessage = "Registration failed. Try again.";
+        }
     }
 }

@@ -25,7 +25,14 @@ else
             {
                 <tr>
                     <td>@device.Name</td>
-                    <td>@device.Usage</std>
+                    <td>
+                        @foreach (var usage in device.Usages)
+                        {
+                            <div>
+                                <strong>@usage.MeasurementName</strong>: @usage.Usage
+                            </div>
+                        }
+                    </td>
                     <td>@device.LastUpdate</td>
                 </tr>
             }
@@ -34,7 +41,7 @@ else
 }
 
 @code {
-    private List<Device> deviceList = new List<Device>();
+    private List<DeviceView> deviceList = new List<DeviceView>();
     private PeriodicTimer? _timer;
     private bool _started;
 
@@ -44,7 +51,7 @@ else
         await LoadDataAsync();
     }
 
-    protected ovViewerride async Task OnAfterRendeViewrAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         //Console.WriteLine($"OnAfterRenderAsync at {DateTime.Now}");
         if (!firstRender || _started)
@@ -72,18 +79,23 @@ else
 
         deviceList.Clear();
 
-        deviceList.Add(new Device()
+        deviceList.Add(new DeviceView()
         {
             Id = 1,
-            Name = "CPUMonitor",
-            Usage =s Random.Shared.Next(0, 100),
-            LastUpdate = now
-        });
-        deviceList.Add(new Device()
-        {
-            Id = 2,
-            Name = "MemoryMonitor",
-          View  Usage =s Random.Shared.Next(0, 100),
+            Name = "SystemMonitor",
+            Usages = new List<SystemUsageView>()
+            {
+                new SystemUsageView()
+                {
+                    MeasurementName = "CPU Usage (%)",
+                    Usage = Random.Shared.Next(0, 100)
+                },
+                new SystemUsageView()
+                {
+                    MeasurementName = "Memory Usage (%)",
+                    Usage = Random.Shared.Next(0, 100)
+                }
+            },
             LastUpdate = now
         });
 
@@ -92,6 +104,6 @@ else
 
     public void Dispose()
     {
-        _timer?.DisposeView();
+        _timer?.Dispose();
     }
 }

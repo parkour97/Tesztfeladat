@@ -1,5 +1,5 @@
 ﻿@page "/log-in"
-@* @inject ApiClient ApiClient *@
+@inject ApiClient ApiClient
 @inject AuthStateProvider AuthProvider
 @inject NavigationManager Nav
 
@@ -44,15 +44,15 @@
     {
         ErrorMessage = null;
 
-        // var token = await ApiClient.LoginAsync(loginModel.UsernameOrEmail, loginModel.Password);
-        // if (token != null)
-        // {
-        //     AuthProvider.MarkUserAsAuthenticated(token);
-        //     Nav.NavigateTo("/");
-        // }
-        // else
-        // {
-        //     ErrorMessage = "Invalid username or password!";
-        // }
+        var token = await ApiClient.LoginAsync(loginModel.UsernameOrEmail, loginModel.Password);
+        if (token != null)
+        {
+            AuthProvider.MarkUserAsAuthenticated(loginModel.UsernameOrEmail);
+            Nav.NavigateTo("/");
+        }
+        else
+        {
+            ErrorMessage = "Invalid username or password!";
+        }
     }
 }

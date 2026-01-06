@@ -123,11 +123,11 @@ else
 	private async Task LoadDataAsync()
 	{
 		//Console.WriteLine($"Reload at {DateTime.Now}");
-		var names = new[] { "CPU Usage", "Memory Usage" };
+		var names = new[] { "CPU Usage (%)", "Memory Usage (%)" };
 		var startDate = DateTime.Now;
 
 		SystemUsageHistory = Enumerable.Range(1, 10)
-			.Select(index => newView SystemUsage
+			.Select(index => new SystemUsageView
 			{
 				Id = index,
 				Timestamp = startDate.AddMinutes(-index),

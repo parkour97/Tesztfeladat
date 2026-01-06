@@ -18,7 +18,7 @@ namespace Server.Controllers
         [HttpGet(Name = "AllUsers")]
         public async Task<IActionResult> Get()
         {
-            return Ok(await context.User.ToListAsync());
+            return Ok(await context.Users.ToListAsync());
         }
     }
 }
