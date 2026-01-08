@@ -61,7 +61,7 @@ CREATE TABLE DeviceParamExp (
     Name varchar(50) NOT NULL,
     DeviceId int NOT NULL,
     Value int NOT NULL,
-    Modifier varchar(50) NULL
+    Modifier varchar(50) NULL,
     Original int NOT NULL,
     Expired timestamp NOT NULL DEFAULT NOW(),
     Deleted boolean NULL
