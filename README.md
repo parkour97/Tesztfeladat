@@ -13,7 +13,7 @@ Psql CLI megnyitása (autentikáció az alapértelmezett adatokkal: localhost ->
 
 A következő lefuttatása az imént nyitott CLI-ben: \i git_repo_elérési_útja/SQL/Tables_and_data.sql
 
-VisualStudio telepítése ASP.NET and web development, és ha nincs benne a csomagban a .NET 8.0 Runtime és WebAssembly hozzáadásával az installerben
+VisualStudio telepítése ( https://visualstudio.microsoft.com/ ) ASP.NET and web development, és ha nincs benne a csomagban a .NET 8.0 Runtime és WebAssembly hozzáadásával az installerben
 
 A VisualStudio megnyitásakor Open a projekt or solution, és a git_repo_elérési_útja/Device mappában található Device.slnx fájl megnyitása
 
