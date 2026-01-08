@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using System.Net.NetworkInformation;
 
 namespace Server.Services
 {
@@ -21,6 +22,8 @@ namespace Server.Services
         private readonly int sendPort;
         private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ConcurrentDictionary<string, TcpClient> clients = new();
+        private readonly int monitorIntervalSeconds;
+        private readonly int pingTimeoutMs;
 
         public TcpServerService(ILogger<TcpServerService> logger, IConfiguration configuration, IServiceScopeFactory serviceScopeFactory)
         {
@@ -29,10 +32,16 @@ namespace Server.Services
             ipAddress = configuration.GetValue<string>("TcpServer:IpAddress") ?? "0.0.0.0";
             port = configuration.GetValue<int>("TcpServer:Port");
             sendPort = configuration.GetValue<int>("TcpServer:SendPort");
+
+            monitorIntervalSeconds = configuration.GetValue<int>("DeviceMonitor:IntervalSeconds", 5);
+
+            pingTimeoutMs = configuration.GetValue<int>("DeviceMonitor:PingTimeoutMs", 1000);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _ = Task.Run(() => MonitorDevicesAsync(stoppingToken), stoppingToken);
+
             var ip = IPAddress.Parse(ipAddress);
             listener = new TcpListener(ip, port);
             listener.Start();
@@ -267,6 +276,53 @@ namespace Server.Services
                     logger.LogWarning(ex, "Failed to send to {Ip}:{Port}", device.IPAddress, port);
                 }
             });
+        }
+
+        private async Task MonitorDevicesAsync(CancellationToken token)
+        {
+            using var ping = new Ping();
+
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    using var scope = serviceScopeFactory.CreateScope();
+                    var context = scope.ServiceProvider.GetRequiredService<ServerDataContext>();
+
+                    var devices = await context.Device.ToListAsync(token);
+
+                    foreach (var device in devices)
+                    {
+                        bool isConnected = false;
+
+                        if (!string.IsNullOrWhiteSpace(device.IPAddress))
+                        {
+                            try
+                            {
+                                var reply = await ping.SendPingAsync(device.IPAddress, pingTimeoutMs);
+                                isConnected = reply.Status == IPStatus.Success;
+                            }
+                            catch
+                            {
+                                isConnected = false;
+                            }
+                        }
+
+                        if (device.Connected != isConnected)
+                        {
+                            device.Connected = isConnected;
+                        }
+                    }
+
+                    await context.SaveChangesAsync(token);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Device ping monitor error");
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(monitorIntervalSeconds), token);
+            }
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)
