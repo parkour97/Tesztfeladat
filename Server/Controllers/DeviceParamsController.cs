@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
+using Server.Model.Entity;
 using Server.Model.View;
+using Server.Services;
 
 namespace Server.Controllers
 {
@@ -10,10 +12,12 @@ namespace Server.Controllers
     public class DeviceParamsController : ControllerBase
     {
         private readonly ServerDataContext context;
+        private readonly TcpServerService tcpServer;
 
-        public DeviceParamsController(ServerDataContext context)
+        public DeviceParamsController(ServerDataContext context, TcpServerService tcpServer)
         {
             this.context = context;
+            this.tcpServer = tcpServer;
         }
 
         [HttpGet]
@@ -55,6 +59,8 @@ namespace Server.Controllers
             param.Modifier = request.Username;
 
             await context.SaveChangesAsync();
+
+            await tcpServer.SendDeviceDataAsync(param.DeviceId);
 
             return Ok();
         }

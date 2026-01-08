@@ -1,4 +1,6 @@
 ﻿@page "/history"
+@attribute [Authorize]
+@inject ApiClient ApiClient
 @rendermode InteractiveServer
 @implements IDisposable
 
@@ -69,23 +71,20 @@ else
 
 	// UI változók
 	private int SelectedDeviceId = 0;
-	private DateTime SelectedFrom = DateTime.Now.Date.AddDays(-7);
+	private DateTime SelectedFrom = DateTime.Now.Date;
 	private DateTime SelectedTo = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
 	private int SetDeviceId = 0;
-	private DateTime SetFrom = DateTime.Now.Date.AddDays(-7);
+	private DateTime SetFrom = DateTime.Now.Date;
 	private DateTime SetTo = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
 
-	private List<DeviceView> Devices = new()
-	{
-		new DeviceView(){Id = 0, Name = "All devices"},
-		new DeviceView(){Id = 1, Name = "SystemMonitor" }
-	};
+	private List<DeviceView> Devices = new();
 
 	protected override async Task OnInitializedAsync()
 	{
 		//Console.WriteLine($"Init at {DateTime.Now}");
+
 		await LoadDataAsync();
 	}
 
@@ -123,26 +122,29 @@ else
 	private async Task LoadDataAsync()
 	{
 		//Console.WriteLine($"Reload at {DateTime.Now}");
-		var names = new[] { "CPU Usage (%)", "Memory Usage (%)" };
-		var startDate = DateTime.Now;
-
-		SystemUsageHistory = Enumerable.Range(1, 10)
-			.Select(index => new SystemUsageView
-			{
-				Id = index,
-				Timestamp = startDate.AddMinutes(-index),
-				Usage = Random.Shared.Next(0, 100),
-				DeviceName = "SystemMonitor",
-				DeviceId = 1 + Random.Shared.Next(names.Length),
-				MeasurementName = names[Random.Shared.Next(names.Length)]
-			})
-			.Where(u =>
-				(SelectedDeviceId == 0 || u.DeviceId == SetDeviceId) &&
-				u.Timestamp >= SetFrom &&
-				u.Timestamp <= SetTo)
-			.ToList();
+		SystemUsageHistory.Clear();
+		foreach (var item in await ApiClient.GetHistoryAsync(SetDeviceId, SetFrom, SetTo))
+		{
+			SystemUsageHistory.Add(item);
+		}
 
 		await InvokeAsync(StateHasChanged);
+	}
+
+	private async Task LoadFiltersAsync()
+	{
+		Devices.Clear();
+
+		Devices.Add(new DeviceView()
+		{
+			Id = 0,
+			Name = "All devices"
+		});
+
+		foreach (var item in await ApiClient.GetDevicesAsync())
+		{
+			Devices.Add(item);
+		}
 	}
 
 	public void Dispose()

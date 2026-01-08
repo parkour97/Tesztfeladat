@@ -1,49 +1,56 @@
 ﻿using Device.Control;
 using Device.Model;
 using System;
+using System.Net;
 
 namespace Device
 {
     public class Worker : BackgroundService
     {
-        private int _interval;
+        private int interval = 60000;
+        private int queueCapacity = 20;
 
-        private readonly SystemUsageMonitor _monitor;
-        private readonly TCPSender _sender;
-        private readonly ILogger<Worker> _logger;
-        private readonly TCPLogger _tcpLogger;
-        private readonly SystemUsageQueue _queue;
+        private readonly string ipAddress;
+        private readonly int port;
 
-        public Worker(ILogger<Worker> logger)
+        private readonly SystemUsageMonitor monitor;
+        private readonly TCPSender sender;
+        private readonly ILogger<Worker> logger;
+        private readonly TCPLogger tcpLogger;
+        private readonly SystemUsageQueue queue;
+
+        public Worker(ILogger<Worker> logger, IConfiguration configuration)
         {
-            _monitor = new SystemUsageMonitor();
-            _sender = new TCPSender("127.0.0.1", 9000);
-            _sender.CommandReceived += OnServerCommand;
-            _logger = logger;
-            _tcpLogger = new TCPLogger(nameof(Worker), _sender);
+            ipAddress = configuration.GetValue<string>("TcpServer:IpAddress") ?? "0.0.0.0";
+            port = configuration.GetValue<int>("TcpServer:Port");
+            monitor = new SystemUsageMonitor();
+            sender = new TCPSender(ipAddress, port);
+            sender.CommandReceived += OnServerCommand;
+            this.logger = logger;
+            tcpLogger = new TCPLogger(nameof(Worker), sender);
 
 
-            _queue = new SystemUsageQueue(capacity: 20); // N méretű sor
-            _interval = 5000;
+            queue = new SystemUsageQueue(capacity: queueCapacity); // N méretű sor
+            
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (_logger.IsEnabled(LogLevel.Information))
-                _logger.LogInformation("Windows monitoring worker started at: {time}", DateTimeOffset.Now);
-            _tcpLogger.LogInformation("Worker started");
+            if (logger.IsEnabled(LogLevel.Information))
+                logger.LogInformation("Windows monitoring worker started at: {time}", DateTimeOffset.Now);
+            tcpLogger.LogInformation("Worker started");
 
-            await _sender.ConnectAsync(stoppingToken);
+            await sender.ConnectAsync(ct: default, logger, maxRetries: 15);
 
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
-                    if (_logger.IsEnabled(LogLevel.Information))
-                        _logger.LogInformation("Getting Data {time}", DateTimeOffset.Now);
-                    _tcpLogger.LogInformation("Getting data");
-                    var cpu = _monitor.GetCpuUsagePercent();
-                    double memPercentage = _monitor.GetMemoryUsagePercent();
+                    if (logger.IsEnabled(LogLevel.Information))
+                        logger.LogInformation("Getting Data {time}", DateTimeOffset.Now);
+                    tcpLogger.LogInformation("Getting data");
+                    var cpu = monitor.GetCpuUsagePercent();
+                    double memPercentage = monitor.GetMemoryUsagePercent();
 
                     var dto = new SystemUsageDTO(
                         CpuPercent: cpu,
@@ -51,32 +58,32 @@ namespace Device
                         Timestamp: DateTime.UtcNow
                     );
 
-                    _queue.Add(dto);
+                    queue.Add(dto);
 
-                    await _sender.SendAsync(dto, stoppingToken);
+                    await sender.SendAsync(dto, stoppingToken);
 
                     LogBuffer();
                 }
                 catch (Exception ex)
                 {
-                    if (_logger.IsEnabled(LogLevel.Information))
-                        _logger.LogError(ex, "Sending error");
-                    _tcpLogger.LogError(ex, "Something went wrong");
+                    if (logger.IsEnabled(LogLevel.Information))
+                        logger.LogError(ex, "Sending error");
+                    tcpLogger.LogError(ex, "Something went wrong");
                 }
 
-                await Task.Delay(_interval, stoppingToken);
+                await Task.Delay(interval, stoppingToken);
             }
         }
 
         private void LogBuffer()
         {
-            var snapshot = _queue.Snapshot();
+            var snapshot = queue.Snapshot();
 
-            _logger.LogInformation("---- Last {Count} system usage samples ----", snapshot.Count);
+            logger.LogInformation("---- Last {Count} system usage samples ----", snapshot.Count);
 
             foreach (var s in snapshot)
             {
-                _logger.LogInformation(
+                logger.LogInformation(
                     "{Time} | CPU: {Cpu}% | MEM: {Mem}%",
                     s.Timestamp,
                     s.CpuPercent,
@@ -89,21 +96,21 @@ namespace Device
             switch (cmd.Type.ToLowerInvariant())
             {
                 case "set_interval":
-                    _interval = cmd.Value;
-                    _logger.LogInformation(
+                    interval = cmd.Value * 1000;
+                    logger.LogInformation(
                         "Interval updated by server to {Interval} ms",
-                        _interval);
+                        interval);
                     break;
 
                 case "set_queue_size":
-                    _queue.Resize(cmd.Value);
-                    _logger.LogInformation(
+                    queue.Resize(cmd.Value);
+                    logger.LogInformation(
                         "Queue size updated by server to {Size}",
                         cmd.Value);
                     break;
 
                 default:
-                    _logger.LogWarning(
+                    logger.LogWarning(
                         "Unknown command type received: {Type}",
                         cmd.Type);
                     break;

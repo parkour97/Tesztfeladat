@@ -53,7 +53,7 @@ namespace Frontend.Control
         {
             var request = new DeviceParamSend(deviceParameterId, value, username);
 
-            var response = await _http.PostAsJsonAsync("api/devicevalue", request);
+            var response = await _http.PostAsJsonAsync("api/deviceparams", request);
 
             return response.IsSuccessStatusCode;
         }

@@ -1,7 +1,9 @@
 ﻿@page "/device-params"
+@attribute [Authorize]
 @rendermode InteractiveServer
-@* @inject ApiClient ApiClient *@
+@inject ApiClient ApiClient
 @inject AuthenticationStateProvider AuthStateProvider
+@inject AuthStateProvider AuthProvider
 @implements IDisposable
 
 <PageTitle>DeviceParams</PageTitle>
@@ -80,42 +82,22 @@ else
     private async void Submit()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (!user.Identity?.IsAuthenticated ?? true)
-        {
-            StatusMessage = "User is not logged in.";
-            return;
-        }
-
-        var username = user.Identity?.Name ?? "UnknownUser";
+        var userName = authState.User.Identity?.Name;
         foreach (var deviceParam in deviceParamList)
         {
-            //var success = await ApiClient.SetDeviceParameterAsync(deviceParam.Id, deviceParam.Value, username);
+            var success = await ApiClient.SetDeviceParameterAsync(deviceParam.Id, deviceParam.Value, userName);
 
-            // StatusMessage = success ? "Value sent successfully!" : "Failed to send value.";
+            StatusMessage = success ? "Value sent successfully!" : "Failed to send value.";
         }
     }
 
     private async Task LoadDataAsync()
     {
         deviceParamList.Clear();
-        deviceParamList.Add(new DeviceParamView()
+        foreach (var item in await ApiClient.GetDeviceParamsAsync())
         {
-            Id = 1,
-            Name = "Interval",
-            Value = 5,
-            DeviceId = 1,
-            DeviceName = "SystemMonitor"
-        });
-        deviceParamList.Add(new DeviceParamView()
-        {
-            Id = 2,
-            Name = "Queue_size",
-            Value = 64,
-            DeviceId = 1,
-            DeviceName = "SystemMonitor"
-        });
+            deviceParamList.Add(item);
+        }
 
         await InvokeAsync(StateHasChanged);
     }

@@ -28,6 +28,7 @@ namespace Server.Model.Entity
 
 
         [Column("created")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime Created { get; set; }
     }
 }

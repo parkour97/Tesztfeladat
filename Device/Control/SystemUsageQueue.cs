@@ -9,44 +9,44 @@ namespace Device.Control
 {
     public class SystemUsageQueue
     {
-        private int _capacity;
-        private readonly Queue<SystemUsageDTO> _queue = new();
-        private readonly object _lock = new();
+        private int capacity;
+        private readonly Queue<SystemUsageDTO> queue = new();
+        private readonly object @lock = new();
 
         public SystemUsageQueue(int capacity)
         {
-            _capacity = capacity;
+            this.capacity = capacity;
         }
 
         public void Resize(int newCapacity)
         {
-            lock (_lock)
+            lock (@lock)
             {
-                _capacity = newCapacity;
+                capacity = newCapacity;
 
-                while (_queue.Count > _capacity)
-                    _queue.Dequeue();
+                while (queue.Count > capacity)
+                    queue.Dequeue();
             }
         }
 
         public void Add(SystemUsageDTO sample)
         {
-            lock (_lock)
+            lock (@lock)
             {
-                if (_queue.Count >= _capacity)
+                if (queue.Count >= capacity)
                 {
-                    _queue.Dequeue(); // legrégebbi törlése
+                    queue.Dequeue(); // legrégebbi törlése
                 }
 
-                _queue.Enqueue(sample);
+                queue.Enqueue(sample);
             }
         }
 
         public IReadOnlyCollection<SystemUsageDTO> Snapshot()
         {
-            lock (_lock)
+            lock (@lock)
             {
-                return _queue.ToList();
+                return queue.ToList();
             }
         }
 

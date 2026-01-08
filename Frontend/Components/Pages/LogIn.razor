@@ -1,58 +1,66 @@
-﻿@page "/log-in"
+﻿@page "/login"
 @inject ApiClient ApiClient
 @inject AuthStateProvider AuthProvider
 @inject NavigationManager Nav
 
 <PageTitle>LogIn</PageTitle>
+<div class="row">
+	<div class="col-lg-4 offset-lg-4 pt-4 pb-4 border">
+		<h3>LogIn</h3>
 
-<h3>LogIn</h3>
+		<EditForm Model="loginModel" OnValidSubmit="HandleLogin" FormName="LoginForm">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
 
-<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+			<div class="mb-3">
+				<label>Username or Email</label>
+				<InputText @bind-Value="loginModel.UsernameOrEmail" class="form-control" />
+				<ValidationMessage For="@(() => loginModel.UsernameOrEmail)" />
+			</div>
 
-    <div class="mb-3">
-        <label>Username or Email</label>
-        <InputText @bind-Value="loginModel.UsernameOrEmail" class="form-control" />
-        <ValidationMessage For="@(() => loginModel.UsernameOrEmail)" />
-    </div>
+			<div class="mb-3">
+				<label>Password</label>
+				<InputText @bind-Value="loginModel.Password" type="password" class="form-control" />
+				<ValidationMessage For="@(() => loginModel.Password)" />
+			</div>
 
-    <div class="mb-3">
-        <label>Password</label>
-        <InputText @bind-Value="loginModel.Password" type="password" class="form-control" />
-        <ValidationMessage For="@(() => loginModel.Password)" />
-    </div>
+			<button type="submit" class="btn btn-primary">Login</button>
+		</EditForm>
 
-    <button type="submit" class="btn btn-primary">Login</button>
-</EditForm>
+		<p>
+			Not registered yet?
+			<a href="/register">Register here</a>
+		</p>
 
-<p>
-    Not registered yet?
-    <a href="/register">Register here</a>
-</p>
-
-@if (!string.IsNullOrEmpty(ErrorMessage))
-{
-    <div class="alert alert-danger">@ErrorMessage</div>
-}
+		@if (!string.IsNullOrEmpty(ErrorMessage))
+		{
+			<div class="alert alert-danger">@ErrorMessage</div>
+		}
+	</div>
+</div>
 
 @code {
-    private LoginModel loginModel = new LoginModel();
-    private string? ErrorMessage;
+	[CascadingParameter]
+	public HttpContext? httpContext { get; set; }
 
-    private async Task HandleLogin()
-    {
-        ErrorMessage = null;
+	[SupplyParameterFromForm]
+	private LoginModel loginModel { get; set; } = new LoginModel();
+	private string? ErrorMessage;
 
-        var token = await ApiClient.LoginAsync(loginModel.UsernameOrEmail, loginModel.Password);
-        if (token != null)
-        {
-            AuthProvider.MarkUserAsAuthenticated(loginModel.UsernameOrEmail);
-            Nav.NavigateTo("/");
-        }
-        else
-        {
-            ErrorMessage = "Invalid username or password!";
-        }
-    }
+	private async Task HandleLogin()
+	{
+		ErrorMessage = null;
+
+		var token = await ApiClient.LoginAsync(loginModel.UsernameOrEmail, loginModel.Password);
+		if (token != null)
+		{
+			await AuthProvider.MarkUserAsAuthenticated(httpContext, loginModel.UsernameOrEmail);
+
+			Nav.NavigateTo("/", true);
+		}
+		else
+		{
+			ErrorMessage = "Invalid username or password!";
+		}
+	}
 }

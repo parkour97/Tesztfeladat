@@ -1,4 +1,5 @@
 ﻿using Device.Model;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,59 +12,80 @@ namespace Device.Control
 {
     public class TCPSender : IDisposable
     {
-        private readonly string _host;
-        private readonly int _port;
+        private readonly string host;
+        private readonly int port;
 
-        private TcpClient? _client;
-        private NetworkStream? _stream;
-        private StreamReader? _reader;
+        private TcpClient? client;
+        private NetworkStream? stream;
+        private StreamReader? reader;
 
         public event Action<ServerCommand>? CommandReceived;
 
         public TCPSender(string host, int port)
         {
-            _host = host;
-            _port = port;
+            this.host = host;
+            this.port = port;
         }
 
-        public async Task ConnectAsync(CancellationToken ct)
+        public async Task ConnectAsync(CancellationToken ct, ILogger logger, int maxRetries = 10, int baseDelayMs = 1000)
         {
-            _client = new TcpClient();
-            await _client.ConnectAsync(_host, _port, ct);
+            var retryCount = 0;
+            while (retryCount < maxRetries && !ct.IsCancellationRequested)
+            {
+                try
+                {
+                    client?.Dispose();  // előző kapcsolat tisztítása
+                    client = new TcpClient();
+                    await client.ConnectAsync(host, port, ct);
 
-            _stream = _client.GetStream();
-            _reader = new StreamReader(_stream, Encoding.UTF8);
+                    stream = client.GetStream();
+                    reader = new StreamReader(stream, Encoding.UTF8);
 
-            // háttérben figyeljük a szerver üzeneteit
-            _ = Task.Run(() => ListenAsync(ct), ct);
+                    logger?.LogInformation("Connected to {Host}:{Port}", host, port);
+
+                    // Listener indítás
+                    _ = Task.Run(() => ListenAsync(ct), ct);
+                    return;  // siker!
+                }
+                catch (Exception ex) when (ex is SocketException or ObjectDisposedException)
+                {
+                    retryCount++;
+                    var delayMs = baseDelayMs * (int)Math.Pow(2, retryCount - 1);  // 1s, 2s, 4s, 8s...
+                    logger?.LogWarning("Connection failed to {Host}:{Port} (retry {Retry}/{Max}): {Error}. Waiting {Delay}ms",
+                        host, port, retryCount, maxRetries, ex.Message, delayMs);
+
+                    await Task.Delay(delayMs, ct);
+                }
+            }
+
+            throw new InvalidOperationException($"Failed to connect to {host}:{port} after {maxRetries} retries");
         }
 
         public async Task SendAsync<T>(T data, CancellationToken ct)
         {
-            if (_stream == null)
+            if (stream == null)
                 throw new InvalidOperationException("TCP client is not connected.");
 
             var json = JsonSerializer.Serialize(data);
             var bytes = Encoding.UTF8.GetBytes(json + "\n");
 
-            await _stream.WriteAsync(bytes, ct);
+            await stream.WriteAsync(bytes, ct);
         }
 
         private async Task ListenAsync(CancellationToken ct)
         {
             try
             {
-                while (!ct.IsCancellationRequested)
+                while (!ct.IsCancellationRequested && reader != null)
                 {
-                    var line = await _reader!.ReadLineAsync();
-                    if (string.IsNullOrWhiteSpace(line))
-                        continue;
-
+                    var line = await reader.ReadLineAsync();
+                    if (string.IsNullOrWhiteSpace(line)) continue;
                     HandleCommand(line);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)  // logold!
             {
+                Console.WriteLine($"Listen error: {ex.Message}");  // vagy logger
             }
         }
 
@@ -71,11 +93,11 @@ namespace Device.Control
         {
             try
             {
-                var cmd = JsonSerializer.Deserialize<ServerCommand>(line);
-                if (cmd == null)
-                    return;
+                var commands = JsonSerializer.Deserialize<ServerCommand[]>(line);  // TÖBB command!
+                if (commands == null) return;
 
-                CommandReceived?.Invoke(cmd);
+                foreach (var cmd in commands)
+                    CommandReceived?.Invoke(cmd);
             }
             catch (JsonException)
             {
@@ -84,9 +106,9 @@ namespace Device.Control
 
         public void Dispose()
         {
-            _reader?.Dispose();
-            _stream?.Dispose();
-            _client?.Dispose();
+            reader?.Dispose();
+            stream?.Dispose();
+            client?.Dispose();
         }
     }
 

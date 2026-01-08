@@ -1,4 +1,6 @@
 ﻿@page "/"
+@attribute [Authorize]
+@inject ApiClient ApiClient
 @rendermode InteractiveServer
 @implements IDisposable
 
@@ -75,29 +77,12 @@ else
 
     private async Task LoadDataAsync()
     {
-        var now = DateTime.Now;
-
         deviceList.Clear();
 
-        deviceList.Add(new DeviceView()
+        foreach (var item in await ApiClient.GetDevicesAsync())
         {
-            Id = 1,
-            Name = "SystemMonitor",
-            Usages = new List<SystemUsageView>()
-            {
-                new SystemUsageView()
-                {
-                    MeasurementName = "CPU Usage (%)",
-                    Usage = Random.Shared.Next(0, 100)
-                },
-                new SystemUsageView()
-                {
-                    MeasurementName = "Memory Usage (%)",
-                    Usage = Random.Shared.Next(0, 100)
-                }
-            },
-            LastUpdate = now
-        });
+            deviceList.Add(item);
+        }
 
         await InvokeAsync(StateHasChanged);
     }

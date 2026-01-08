@@ -1,44 +1,37 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components;
 using System.Security.Claims;
 
 namespace Frontend.Control
 {
-    public class AuthStateProvider : AuthenticationStateProvider
+    public class AuthStateProvider
     {
-        private ClaimsPrincipal _anonymous = new(new ClaimsIdentity());
-        private string? _username;
+        private ClaimsPrincipal currentUser;
 
-        public void MarkUserAsAuthenticated(string username)
+        public AuthStateProvider()
         {
-            _username = username;
+        }
 
+        public string? CurrentUserName => currentUser.Identity?.Name;
+
+        public async Task MarkUserAsAuthenticated(HttpContext? httpContext, string username)
+        {
             var identity = new ClaimsIdentity(new[]
             {
                 new Claim(ClaimTypes.Name, username)
-            }, "apiauth_type");
+            }, CookieAuthenticationDefaults.AuthenticationScheme);
 
-            var user = new ClaimsPrincipal(identity);
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
+            currentUser = new ClaimsPrincipal(identity);
+
+            await httpContext.SignInAsync(currentUser);
         }
 
-        public void MarkUserAsLoggedOut()
+        public async Task MarkUserAsLoggedOut(HttpContext? httpContext)
         {
-            _username = null;
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
-        }
-
-        public override Task<AuthenticationState> GetAuthenticationStateAsync()
-        {
-            if (string.IsNullOrEmpty(_username))
-                return Task.FromResult(new AuthenticationState(_anonymous));
-
-            var identity = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Name, _username)
-            }, "apiauth_type");
-
-            var user = new ClaimsPrincipal(identity);
-            return Task.FromResult(new AuthenticationState(user));
+            await httpContext.SignOutAsync();
+            currentUser = new ClaimsPrincipal(new ClaimsIdentity());
         }
     }
+
 }

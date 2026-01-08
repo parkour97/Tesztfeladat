@@ -23,7 +23,12 @@ namespace Server.Model.Entity
         public float Usage { get; set; }
 
 
+        [Column("timestamp")]
+        public DateTime Timestamp { get; set; }
+
+
         [Column("created")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public DateTime Created { get; set; }
     }
 
