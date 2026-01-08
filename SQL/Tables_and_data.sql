@@ -45,7 +45,7 @@ CREATE TABLE DeviceParam (
     Name varchar(50) NOT NULL,
     DeviceId int NOT NULL,
     Value int NOT NULL,
-    Modifier varchar(50) NULL
+    Modifier varchar(50) NULL,
     Created timestamp NOT NULL DEFAULT NOW(),
     Modified timestamp NULL
 );
