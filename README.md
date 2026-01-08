@@ -10,6 +10,7 @@ A feladat egy három fő részből álló rendszer:
 PostgreSQL telepítése alapértelmezett beállításokkal, tetszőleges jelszóval ( https://www.postgresql.org/download/ )
 
 Psql CLI megnyitása (autentikáció az alapértelmezett adatokkal: localhost -> postgres -> 5432 -> postgres -> jelszó)
+Opcionálisan GUI is használható, pgAdmin az alkalmazás neve
 
 A következő lefuttatása az imént nyitott CLI-ben: \i git_repo_elérési_útja/SQL/Tables_and_data.sql
 
