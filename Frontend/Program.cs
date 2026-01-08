@@ -8,9 +8,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddHttpClient<ApiClient>(client =>
+builder.Services.AddHttpClient<ApiClient>((sp, client) =>
 {
-    client.BaseAddress = new Uri("https://localhost:7056/");
+    var config = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = config["Api:BaseUrl"];
+
+    if (string.IsNullOrWhiteSpace(baseUrl))
+        throw new InvalidOperationException("Api:BaseUrl is not configured");
+
+    client.BaseAddress = new Uri(baseUrl);
 });
 
 builder.Services.AddScoped<AuthStateProvider>();

@@ -1,7 +1,19 @@
 using Device;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker>();
+Host.CreateDefaultBuilder(args)
+    .UseWindowsService(options =>
+    {
+        options.ServiceName = "My Worker Service";
+    })
+    .ConfigureServices(services =>
+    {
+        services.AddHostedService<Worker>();
+    })
+    .Build()
+    .Run();
 
-var host = builder.Build();
-host.Run();
+//var builder = Host.CreateApplicationBuilder(args);
+//builder.Services.AddHostedService<Worker>();
+
+//var host = builder.Build();
+//host.Run();
