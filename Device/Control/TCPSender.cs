@@ -1,8 +1,10 @@
 ﻿using Device.Model;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
@@ -14,38 +16,41 @@ namespace Device.Control
     {
         private readonly string host;
         private readonly int port;
+        private readonly int recievePort;
 
         private TcpClient? client;
+        private TcpListener? listener;
+        private readonly CancellationTokenSource cts = new();
         private NetworkStream? stream;
         private StreamReader? reader;
+        private ILogger logger;
 
         public event Action<ServerCommand>? CommandReceived;
 
-        public TCPSender(string host, int port)
+        public TCPSender(string host, int port, int recievePort, ILogger logger)
         {
             this.host = host;
             this.port = port;
+            this.recievePort = recievePort;
+            this.logger = logger;
         }
 
-        public async Task ConnectAsync(CancellationToken ct, ILogger logger, int maxRetries = 10, int baseDelayMs = 1000)
+        public async Task ConnectAsync(CancellationToken ct, int maxRetries = 10, int baseDelayMs = 1000)
         {
             var retryCount = 0;
             while (retryCount < maxRetries && !ct.IsCancellationRequested)
             {
                 try
                 {
-                    client?.Dispose();  // előző kapcsolat tisztítása
+                    client?.Dispose();
                     client = new TcpClient();
                     await client.ConnectAsync(host, port, ct);
 
                     stream = client.GetStream();
-                    reader = new StreamReader(stream, Encoding.UTF8);
 
                     logger?.LogInformation("Connected to {Host}:{Port}", host, port);
 
-                    // Listener indítás
-                    _ = Task.Run(() => ListenAsync(ct), ct);
-                    return;  // siker!
+                    return;
                 }
                 catch (Exception ex) when (ex is SocketException or ObjectDisposedException)
                 {
@@ -61,6 +66,70 @@ namespace Device.Control
             throw new InvalidOperationException($"Failed to connect to {host}:{port} after {maxRetries} retries");
         }
 
+        public Task StartReceiveLoopAsync(CancellationToken ct)
+        {
+            return Task.Run(async () =>
+            {
+                var ip = IPAddress.Parse(host);
+                listener = new TcpListener(ip, recievePort);
+                listener.Start();
+
+                logger.LogInformation("TCP listener started on port {RecievePort}", recievePort);
+
+                try
+                {
+                    while (!ct.IsCancellationRequested)
+                    {
+                        var client = await listener.AcceptTcpClientAsync(ct);
+                        _ = HandleClientAsync(client, ct);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "TCP receive loop crashed");
+                }
+                finally
+                {
+                    listener.Stop();
+                }
+            }, ct);
+        }
+
+        private async Task HandleClientAsync(TcpClient client, CancellationToken ct)
+        {
+            var clientIp = ((IPEndPoint)client.Client.RemoteEndPoint!).Address.ToString();
+
+            try
+            {
+                logger.LogInformation("Client connected: {ClientIp}", clientIp);
+                using var stream = client.GetStream();
+                using var reader = new StreamReader(stream, Encoding.UTF8);
+
+                while (!ct.IsCancellationRequested)
+                {
+                    var line = await reader.ReadLineAsync();
+                    if (line == null) break;
+
+                    HandleCommand(line);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Client processing error");
+            }
+            finally
+            {
+                client.Dispose();
+                logger.LogInformation("Client disconnected: {ClientIp}", clientIp);
+            }
+        }
+
         public async Task SendAsync<T>(T data, CancellationToken ct)
         {
             if (stream == null)
@@ -72,28 +141,12 @@ namespace Device.Control
             await stream.WriteAsync(bytes, ct);
         }
 
-        private async Task ListenAsync(CancellationToken ct)
-        {
-            try
-            {
-                while (!ct.IsCancellationRequested && reader != null)
-                {
-                    var line = await reader.ReadLineAsync();
-                    if (string.IsNullOrWhiteSpace(line)) continue;
-                    HandleCommand(line);
-                }
-            }
-            catch (Exception ex)  // logold!
-            {
-                Console.WriteLine($"Listen error: {ex.Message}");  // vagy logger
-            }
-        }
-
         private void HandleCommand(string line)
         {
             try
             {
-                var commands = JsonSerializer.Deserialize<ServerCommand[]>(line);  // TÖBB command!
+                logger.LogInformation($"Message Recieved");
+                var commands = JsonSerializer.Deserialize<ServerCommand[]>(line);
                 if (commands == null) return;
 
                 foreach (var cmd in commands)

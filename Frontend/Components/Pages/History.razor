@@ -8,37 +8,37 @@
 
 <h1>Usage History</h1>
 
+
+<div class="row mb-3 align-items-end">
+	<div class="col-md-3">
+		<label class="form-label">Device</label>
+		<select class="form-select" @bind="SelectedDeviceId">
+			@foreach (var device in Devices)
+			{
+				<option value="@device.Id">@device.Name</option>
+			}
+		</select>
+	</div>
+	<div class="col-md-3">
+		<label class="form-label">From</label>
+		<input type="datetime-local" class="form-control" @bind="SelectedFrom" />
+	</div>
+	<div class="col-md-3">
+		<label class="form-label">To</label>
+		<input type="datetime-local" class="form-control" @bind="SelectedTo" />
+	</div>
+	<div class="col-md-3">
+		<button class="btn btn-primary w-100" @onclick="ApplyFilters">
+			Apply
+		</button>
+	</div>
+</div>
 @if (SystemUsageHistory.Count == 0)
 {
 	<p><em>Loading...</em></p>
 }
 else
 {
-	<div class="row mb-3 align-items-end">
-		<div class="col-md-3">
-			<label class="form-label">Device</label>
-			<select class="form-select" @bind="SelectedDeviceId">
-				@foreach (var device in Devices)
-				{
-					<option value="@device.Id">@device.Name</option>
-				}
-			</select>
-		</div>
-		<div class="col-md-3">
-			<label class="form-label">From</label>
-			<input type="datetime-local" class="form-control" @bind="SelectedFrom" />
-		</div>
-		<div class="col-md-3">
-			<label class="form-label">To</label>
-			<input type="datetime-local" class="form-control" @bind="SelectedTo" />
-		</div>
-		<div class="col-md-3">
-			<button class="btn btn-primary w-100" @onclick="ApplyFilters">
-				Apply
-			</button>
-		</div>
-	</div>
-
 	<table class="table">
 		<thead>
 			<tr>
@@ -50,7 +50,7 @@ else
 			</tr>
 		</thead>
 		<tbody>
-			@foreach (var usage in SystemUsageHistory)
+			@foreach (var usage in PagedItems)
 			{
 				<tr>
 					<td>@usage.DeviceId</td>
@@ -62,6 +62,45 @@ else
 			}
 		</tbody>
 	</table>
+	<div class="row mb-2">
+		<div class="col-md-3">
+			<label class="form-label">Records per page</label>
+			<select class="form-select" @onchange="OnPageSizeChanged">
+				@foreach (var size in PageSizeOptions)
+				{
+					<option value="@size" selected="@(size == PageSize)">
+						@size
+					</option>
+				}
+			</select>
+		</div>
+	</div>
+	<nav>
+		<ul class="pagination justify-content-center">
+
+			<li class="page-item @(CurrentPage == 1 ? "disabled" : "")">
+				<button class="page-link" @onclick="() => ChangePage(CurrentPage - 1)">
+					&laquo;
+				</button>
+			</li>
+
+			@for (int i = 1; i <= TotalPages; i++)
+			{
+				<li class="page-item @(i == CurrentPage ? "active" : "")">
+					<button class="page-link" @onclick="() => ChangePage(i)">
+						@i
+					</button>
+				</li>
+			}
+
+			<li class="page-item @(CurrentPage == TotalPages ? "disabled" : "")">
+				<button class="page-link" @onclick="() => ChangePage(CurrentPage + 1)">
+					&raquo;
+				</button>
+			</li>
+
+		</ul>
+	</nav>
 }
 
 @code {
@@ -78,13 +117,25 @@ else
 	private DateTime SetFrom = DateTime.Now.Date;
 	private DateTime SetTo = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
 
+	private int CurrentPage = 1;
+	private int PageSize = 10;
+
+	private readonly int[] PageSizeOptions = new[] { 10, 25, 50, 100 };
+
+	private int TotalPages =>
+		(int)Math.Ceiling(SystemUsageHistory.Count / (double)PageSize);
 
 	private List<DeviceView> Devices = new();
+
+	private IEnumerable<SystemUsageView> PagedItems =>
+		SystemUsageHistory
+			.Skip((CurrentPage - 1) * PageSize)
+			.Take(PageSize);
 
 	protected override async Task OnInitializedAsync()
 	{
 		//Console.WriteLine($"Init at {DateTime.Now}");
-
+		await LoadFiltersAsync();
 		await LoadDataAsync();
 	}
 
@@ -117,6 +168,8 @@ else
 		SetTo = SelectedTo;
 
 		await LoadDataAsync();
+
+		CurrentPage = 1;
 	}
 
 	private async Task LoadDataAsync()
@@ -127,6 +180,8 @@ else
 		{
 			SystemUsageHistory.Add(item);
 		}
+
+		SystemUsageHistory = SystemUsageHistory.OrderByDescending(x => x.Timestamp).ToList();
 
 		await InvokeAsync(StateHasChanged);
 	}
@@ -145,6 +200,20 @@ else
 		{
 			Devices.Add(item);
 		}
+	}
+
+	private void ChangePage(int page)
+	{
+		if (page < 1 || page > TotalPages)
+			return;
+
+		CurrentPage = page;
+	}
+
+	private void OnPageSizeChanged(ChangeEventArgs e)
+	{
+		PageSize = int.Parse(e.Value!.ToString()!);
+		CurrentPage = 1; // vissza az első oldalra
 	}
 
 	public void Dispose()

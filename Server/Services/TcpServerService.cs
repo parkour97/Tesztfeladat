@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Server.Data;
+using Server.Interfaces;
 using Server.Model;
 using Server.Model.Entity;
 using System.Collections.Concurrent;
@@ -11,13 +11,14 @@ using System.Text.Json;
 
 namespace Server.Services
 {
-    public class TcpServerService : BackgroundService, IDisposable
+    public class TcpServerService : BackgroundService, ITcpServerClient, IDisposable
     {
         private readonly ILogger<TcpServerService> logger;
         private TcpListener? listener;
         private readonly CancellationTokenSource cts = new();
         private readonly string ipAddress;
         private readonly int port;
+        private readonly int sendPort;
         private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ConcurrentDictionary<string, TcpClient> clients = new();
 
@@ -27,6 +28,7 @@ namespace Server.Services
             this.serviceScopeFactory = serviceScopeFactory;
             ipAddress = configuration.GetValue<string>("TcpServer:IpAddress") ?? "0.0.0.0";
             port = configuration.GetValue<int>("TcpServer:Port");
+            sendPort = configuration.GetValue<int>("TcpServer:SendPort");
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -246,31 +248,25 @@ namespace Server.Services
                 return;
             }
 
-            // Kliens keresése IP alapján (clients dictionary-ből)
-            if (clients.TryGetValue(device.IPAddress, out TcpClient? client) && client?.Connected == true)
+            _ = Task.Run(async () =>
             {
-                var json = JsonSerializer.Serialize(paramsData);
-                await SendToClientAsync(client, json);
-                logger.LogInformation("Parameters sent to DeviceId {DeviceId} -> {Ip}: {Count} db",
-                    deviceId, device.IPAddress, paramsData.Count);
-            }
-            else
-            {
-                logger.LogWarning("No client connected to IP: {Ip}", device.IPAddress);
-            }
-        }
-
-        private async Task SendToClientAsync(TcpClient client, string json)
-        {
-            try
-            {
-                var bytes = Encoding.UTF8.GetBytes(json + "\n");
-                await client.GetStream().WriteAsync(bytes);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error at sending to client");
-            }
+                try
+                {
+                    using var tempClient = new TcpClient();
+                    await tempClient.ConnectAsync(device.IPAddress, sendPort);
+                    using var stream = tempClient.GetStream();
+                    var json = JsonSerializer.Serialize(paramsData) + "\r\n";
+                    var bytes = Encoding.UTF8.GetBytes(json);
+                    await stream.WriteAsync(bytes);
+                    await stream.FlushAsync();
+                    logger.LogInformation("Params sent to {Ip}:{SendPort} (DeviceId {DeviceId})",
+                        device.IPAddress, sendPort, device.Id);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to send to {Ip}:{Port}", device.IPAddress, port);
+                }
+            });
         }
 
         public override async Task StopAsync(CancellationToken cancellationToken)

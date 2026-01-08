@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
+using Server.Interfaces;
 using Server.Model.Entity;
 using Server.Model.View;
 using Server.Services;
@@ -12,12 +13,12 @@ namespace Server.Controllers
     public class DeviceParamsController : ControllerBase
     {
         private readonly ServerDataContext context;
-        private readonly TcpServerService tcpServer;
+        private readonly ITcpServerClient tcpClient;
 
-        public DeviceParamsController(ServerDataContext context, TcpServerService tcpServer)
+        public DeviceParamsController(ServerDataContext context, ITcpServerClient tcpServer)
         {
             this.context = context;
-            this.tcpServer = tcpServer;
+            this.tcpClient = tcpServer;
         }
 
         [HttpGet]
@@ -60,7 +61,7 @@ namespace Server.Controllers
 
             await context.SaveChangesAsync();
 
-            await tcpServer.SendDeviceDataAsync(param.DeviceId);
+            await tcpClient.SendDeviceDataAsync(param.DeviceId);
 
             return Ok();
         }

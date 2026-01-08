@@ -1,5 +1,4 @@
 ﻿using Frontend.Models;
-using static System.Net.WebRequestMethods;
 
 namespace Frontend.Control
 {
@@ -43,8 +42,7 @@ namespace Frontend.Control
         {
             var url = $"api/deviceparams";
 
-            var result =
-                await _http.GetFromJsonAsync<List<DeviceParamView>>(url);
+            var result = await _http.GetFromJsonAsync<List<DeviceParamView>>(url);
 
             return result ?? new List<DeviceParamView>();
         }

@@ -12,6 +12,7 @@ namespace Device
 
         private readonly string ipAddress;
         private readonly int port;
+        private readonly int recievePort;
 
         private readonly SystemUsageMonitor monitor;
         private readonly TCPSender sender;
@@ -23,15 +24,14 @@ namespace Device
         {
             ipAddress = configuration.GetValue<string>("TcpServer:IpAddress") ?? "0.0.0.0";
             port = configuration.GetValue<int>("TcpServer:Port");
+            recievePort = configuration.GetValue<int>("TcpServer:RecievePort");
             monitor = new SystemUsageMonitor();
-            sender = new TCPSender(ipAddress, port);
+            sender = new TCPSender(ipAddress, port, recievePort, logger);
             sender.CommandReceived += OnServerCommand;
             this.logger = logger;
             tcpLogger = new TCPLogger(nameof(Worker), sender);
 
-
-            queue = new SystemUsageQueue(capacity: queueCapacity); // N méretű sor
-            
+            queue = new SystemUsageQueue(capacity: queueCapacity);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -40,7 +40,8 @@ namespace Device
                 logger.LogInformation("Windows monitoring worker started at: {time}", DateTimeOffset.Now);
             tcpLogger.LogInformation("Worker started");
 
-            await sender.ConnectAsync(ct: default, logger, maxRetries: 15);
+            await sender.ConnectAsync(ct: default, maxRetries: 15);
+            _ = sender.StartReceiveLoopAsync(stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)
             {

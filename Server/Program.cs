@@ -16,6 +16,7 @@ builder.Services.AddDbContext<ServerDataContext>(options =>
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddHostedService<TcpServerService>();
+builder.Services.AddSingleton<ITcpServerClient, TcpServerService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -26,10 +26,10 @@ namespace Server.Controllers
                 return BadRequest("From date can't be later than To date.");
 
             var result = await context.SystemUsage
-                .Where(su => su.DeviceId == deviceId &&
+                .Where(su => (deviceId == 0 || su.DeviceId == deviceId) &&
                              su.Created >= from &&
                              su.Created <= to)
-                .OrderBy(su => su.Created).Join(
+                .OrderByDescending(su => su.Created).Join(
                 context.Device,
                 su => su.DeviceId,
                 d => d.Id,

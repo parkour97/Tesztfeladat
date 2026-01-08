@@ -30,13 +30,27 @@ else
                 <tr>
                     <td>@deviceParam.DeviceName</td>
                     <td>@deviceParam.Name</td>
-                    <td><input type="number" @bind="deviceParam.Value" @bind:event="oninput" /></td>
+                    <td>
+                        <input type="number"
+                               @bind="deviceParam.Value"
+                               @bind:event="oninput"
+                               class="form-control" />
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm"
+                                @onclick="() => SubmitSingle(deviceParam)"
+                                disabled="@isSubmitting">
+                            @if (isSubmitting && currentSubmittingId == deviceParam.Id)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            Submit
+                        </button>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
-
-    <button class="btn btn-primary" @onclick="Submit">Submit</button>
 
     @if (!string.IsNullOrEmpty(StatusMessage))
     {
@@ -50,6 +64,9 @@ else
     private bool _started;
 
     private string? StatusMessage;
+
+    private bool isSubmitting;
+    private int? currentSubmittingId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,15 +96,32 @@ else
         }
     }
 
-    private async void Submit()
+    private async Task SubmitSingle(DeviceParamView deviceParam)
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var userName = authState.User.Identity?.Name;
-        foreach (var deviceParam in deviceParamList)
+        isSubmitting = true;
+        currentSubmittingId = deviceParam.Id;
+        StateHasChanged();  // UI frissítés (spinner)
+
+        try
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userName = authState.User.Identity?.Name;
+
             var success = await ApiClient.SetDeviceParameterAsync(deviceParam.Id, deviceParam.Value, userName);
 
-            StatusMessage = success ? "Value sent successfully!" : "Failed to send value.";
+            StatusMessage = success
+                ? $"[{deviceParam.Name}] Value sent successfully!"
+                : $"[{deviceParam.Name}] Failed to send value.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+            currentSubmittingId = null;
+            StateHasChanged();
         }
     }
 
