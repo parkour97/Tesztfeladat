@@ -88,6 +88,7 @@ CREATE TABLE SystemUsageExp (
     MeasurementName varchar(50) NOT NULL,
     Usage real NOT NULL,
     Timestamp timestamp NULL,
+    Original int NOT NULL,
     Expired timestamp NOT NULL DEFAULT NOW(),
     Deleted boolean NULL
 );

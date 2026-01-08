@@ -178,6 +178,24 @@ namespace Server.Services
                     };
                     context.Device.Add(device);
                     await context.SaveChangesAsync();  // ID generálás után
+
+                    var deviceParam = new DeviceParam()
+                    {
+                        DeviceId = device.Id,
+                        Name="Interval",
+                        Value=60
+                    };
+                    context.DeviceParam.Add(deviceParam);
+                    await context.SaveChangesAsync();
+
+                    deviceParam = new DeviceParam()
+                    {
+                        DeviceId = device.Id,
+                        Name = "Queue_size",
+                        Value = 20
+                    };
+                    context.DeviceParam.Add(deviceParam);
+                    await context.SaveChangesAsync();
                 }
 
                 var timestamp = root.TryGetProperty("Timestamp", out var tsProp)
