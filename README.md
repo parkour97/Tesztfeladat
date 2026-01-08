@@ -20,6 +20,9 @@ A VisualStudio megnyitásakor Open a projekt or solution, és a git_repo_eléré
 
 A Solution Explorerben jobb kattintás a Solution-re, majd Properties -> Configure Startup Projects -> Multiple startup projects -> Mindjárom projektnél az action-t Start-ra kell állítani -> Ok
 
+A Server projektben található appsettings.json-ben a 10. sorban a "PostgresContext" Password paraméterében meg kell adni a korábban a postgresnek megadott jelszót
+Illetve ha új adatbázist hoztunk létre akkor annak a nevét a Database paraméterben lehet megadni ugyanitt
+
 A Start vagy a Start without debugging gombokkal indítható a rendszer
 
 ## Usage
