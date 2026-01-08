@@ -2,9 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Server.Interfaces;
-using Server.Model.Entity;
 using Server.Model.View;
-using Server.Services;
 
 namespace Server.Controllers
 {
@@ -48,14 +46,12 @@ namespace Server.Controllers
         [HttpPost]
         public async Task<IActionResult> Post(DeviceParamRecieve request)
         {
-            // Megkeressük a DeviceParam rekordot
             var param = await context.DeviceParam
                 .FirstOrDefaultAsync(dp => dp.Id == request.DeviceParameterId);
 
             if (param == null)
                 return NotFound("DeviceParam not found.");
 
-            // Frissítjük az értéket és a modifier mezőt
             param.Value = request.Value;
             param.Modifier = request.Username;
 

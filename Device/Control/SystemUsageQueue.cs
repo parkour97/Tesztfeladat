@@ -1,9 +1,4 @@
 ﻿using Device.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Device.Control
 {
@@ -35,7 +30,7 @@ namespace Device.Control
             {
                 if (queue.Count >= capacity)
                 {
-                    queue.Dequeue(); // legrégebbi törlése
+                    queue.Dequeue();
                 }
 
                 queue.Enqueue(sample);

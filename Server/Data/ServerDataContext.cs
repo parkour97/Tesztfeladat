@@ -19,20 +19,5 @@ namespace Server.Data
         {
             
         }
-
-        //protected override void OnModelCreating(ModelBuilder modelBuilder)
-        //{
-        //    modelBuilder.Entity<SystemUsage>()
-        //        .Property(e => e.Created)
-        //        .HasConversion(
-        //            v => v.ToUniversalTime(),
-        //            v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
-
-        //    modelBuilder.Entity<Log>()
-        //        .Property(e => e.Timestamp)
-        //        .HasConversion(
-        //            v => v.ToUniversalTime(),
-        //            v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
-        //}
     }
 }

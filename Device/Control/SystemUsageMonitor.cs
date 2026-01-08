@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Linq;
 
 namespace Device.Control
 {
@@ -75,7 +74,6 @@ namespace Device.Control
 
         private double GetFallbackCpuUsage()
         {
-            // eredeti folyamat CPU (cross-platform fallback)
             var process = Process.GetCurrentProcess();
             var now = DateTime.UtcNow;
 

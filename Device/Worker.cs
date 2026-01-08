@@ -1,7 +1,5 @@
 ﻿using Device.Control;
 using Device.Model;
-using System;
-using System.Net;
 
 namespace Device
 {

@@ -70,19 +70,16 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        //Console.WriteLine($"Init at {DateTime.Now}");
         await LoadDataAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        //Console.WriteLine($"OnAfterRenderAsync at {DateTime.Now}");
         if (!firstRender || _started)
             return;
 
         _started = true;
 
-        //Console.WriteLine($"Interactive render at {DateTime.Now}");
         _timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
 
         _ = RunRefreshLoopAsync();
@@ -100,7 +97,7 @@ else
     {
         isSubmitting = true;
         currentSubmittingId = deviceParam.Id;
-        StateHasChanged();  // UI frissítés (spinner)
+        StateHasChanged();
 
         try
         {

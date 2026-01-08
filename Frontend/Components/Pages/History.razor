@@ -108,7 +108,6 @@ else
 	private PeriodicTimer? _timer;
 	private bool _started;
 
-	// UI változók
 	private int SelectedDeviceId = 0;
 	private DateTime SelectedFrom = DateTime.Now.Date;
 	private DateTime SelectedTo = DateTime.Now.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
@@ -134,20 +133,17 @@ else
 
 	protected override async Task OnInitializedAsync()
 	{
-		//Console.WriteLine($"Init at {DateTime.Now}");
 		await LoadFiltersAsync();
 		await LoadDataAsync();
 	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
-		//Console.WriteLine($"OnAfterRenderAsync at {DateTime.Now}");
 		if (!firstRender || _started)
 			return;
 
 		_started = true;
 
-		//Console.WriteLine($"Interactive render at {DateTime.Now}");
 		_timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
 
 		_ = RunRefreshLoopAsync();
@@ -174,7 +170,6 @@ else
 
 	private async Task LoadDataAsync()
 	{
-		//Console.WriteLine($"Reload at {DateTime.Now}");
 		SystemUsageHistory.Clear();
 		foreach (var item in await ApiClient.GetHistoryAsync(SetDeviceId, SetFrom, SetTo))
 		{
@@ -213,7 +208,7 @@ else
 	private void OnPageSizeChanged(ChangeEventArgs e)
 	{
 		PageSize = int.Parse(e.Value!.ToString()!);
-		CurrentPage = 1; // vissza az első oldalra
+		CurrentPage = 1;
 	}
 
 	public void Dispose()

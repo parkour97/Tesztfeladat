@@ -5,7 +5,6 @@ using Server.Interfaces;
 using Server.Model;
 using Server.Model.Entity;
 using Server.Model.View;
-using System;
 
 namespace Server.Services
 {
@@ -60,7 +59,6 @@ namespace Server.Services
             if (result == PasswordVerificationResult.Failed)
                 return null;
 
-            // Itt általában JWT tokent generálunk
             return GenerateToken(user);
         }
 

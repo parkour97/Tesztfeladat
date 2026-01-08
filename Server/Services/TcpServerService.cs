@@ -100,7 +100,7 @@ namespace Server.Services
             {
                 if (await ProcessSystemUsageAsync(json, clientIp, context))
                     return;
-                // Ha nem illik, akkor Log-ként
+
                 if (JsonSerializer.Deserialize<LogMessageDTO>(json, new JsonSerializerOptions()) is LogMessageDTO logDto)
                 {
                     var device = await context.Device.FirstOrDefaultAsync(d => d.IPAddress == clientIp);
@@ -165,7 +165,6 @@ namespace Server.Services
                 if (root.ValueKind != JsonValueKind.Object)
                     return false;
 
-                // Device keresése IP alapján
                 var device = await context.Device.FirstOrDefaultAsync(d => d.IPAddress == clientIp);
                 if (device == null)
                 {
@@ -177,7 +176,7 @@ namespace Server.Services
                         MeasurementCount = 0
                     };
                     context.Device.Add(device);
-                    await context.SaveChangesAsync();  // ID generálás után
+                    await context.SaveChangesAsync();
 
                     var deviceParam = new DeviceParam()
                     {
@@ -204,7 +203,6 @@ namespace Server.Services
 
                 var measurements = new List<SystemUsage>();
 
-                // Minden property-t végigmegyünk (timestamp kivételével)
                 foreach (var prop in root.EnumerateObject())
                 {
                     if (prop.Name.Equals("Timestamp", StringComparison.OrdinalIgnoreCase))
@@ -213,7 +211,7 @@ namespace Server.Services
                     if (prop.Value.ValueKind == JsonValueKind.Number &&
                         prop.Value.TryGetDouble(out double doubleValue))
                     {
-                        float value = (float)doubleValue;  // double -> float safe konverzió
+                        float value = (float)doubleValue;
 
                         measurements.Add(new SystemUsage
                         {
