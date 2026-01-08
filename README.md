@@ -9,19 +9,23 @@ A feladat egy három fő részből álló rendszer:
 
 PostgreSQL telepítése alapértelmezett beállításokkal, tetszőleges jelszóval ( https://www.postgresql.org/download/ )
 
-Psql CLI megnyitása (autentikáció az alapértelmezett adatokkal: localhost -> postgres -> 5432 -> postgres -> jelszó)
+Psql CLI megnyitása (keresőmezőbe psql) 
+Autentikáció az alapértelmezett adatokkal: localhost -> postgres -> 5432 -> postgres -> jelszó
 Opcionálisan GUI is használható, pgAdmin az alkalmazás neve
 
 A következő lefuttatása az imént nyitott CLI-ben: \i git_repo_elérési_útja/SQL/Tables_and_data.sql
+FONTOS! Az elérési út / jeleket használjon FONTOS!
 
 VisualStudio telepítése ( https://visualstudio.microsoft.com/ ) ASP.NET and web development, és ha nincs benne a csomagban a .NET 8.0 Runtime és WebAssembly hozzáadásával az installerben
 
-A VisualStudio megnyitásakor Open a projekt or solution, és a git_repo_elérési_útja/Device mappában található Device.slnx fájl megnyitása
+A VisualStudio megnyitásakor Open a project or solution, és a git_repo_elérési_útja/Device mappában található Device.slnx fájl megnyitása
 
 A Solution Explorerben jobb kattintás a Solution-re, majd Properties -> Configure Startup Projects -> Multiple startup projects -> Mindjárom projektnél az action-t Start-ra kell állítani -> Ok
 
 A Server projektben található appsettings.json-ben a 10. sorban a "PostgresContext" Password paraméterében meg kell adni a korábban a postgresnek megadott jelszót
 Illetve ha új adatbázist hoztunk létre akkor annak a nevét a Database paraméterben lehet megadni ugyanitt
+
+Mindhárom projektben a következő projekt config fájlokra érdemes lehet ránézni: Properties/launchSettings.json | appsettings.json
 
 A Start vagy a Start without debugging gombokkal indítható a rendszer
 
